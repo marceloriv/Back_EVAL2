@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  # Servicio de Base de Datos MySQL
+  db:
+    image: mysql:8.0
+    container_name: mysql_db
+    restart: always
+    environment:
+      # Configuración de inicialización de MySQL
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: proyecto_db
+    ports:
+      - "3306:3306"
+    volumes:
+      # Volumen para que los datos persistan si se reinicia el contenedor
+      - db_data:/var/lib/mysql
+
+  # Servicio de tu Backend (API REST)
+  backend:
+    build: .
+    container_name: node_backend
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      # Variables de entorno definidas en tu README (.env)
+      - PORT=3000
+      - DB_HOST=db # Apunta al nombre del servicio de arriba ('db')
+      - DB_USER=root
+      - DB_PASSWORD=rootpassword # Debe coincidir con MYSQL_ROOT_PASSWORD
+      - DB_NAME=proyecto_db # Debe coincidir con MYSQL_DATABASE
+      - DB_PORT=3306
+    depends_on:
+      - db # Asegura que la BD inicie antes que el backend
+
+volumes:
+  db_data:
