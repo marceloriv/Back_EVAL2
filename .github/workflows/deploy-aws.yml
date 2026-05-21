@@ -1,0 +1,47 @@
+name: CI/CD Backend — Innovatech
+
+on:
+  push:
+    branches:
+      - deploy
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: login dockerhub
+        run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+
+      - name: build imagen
+        run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/back-eval2:latest .
+
+      - name: push imagen
+        run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/back-eval2:latest
+
+      - name: deploy en ec2 privada via bastion
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.BACKEND_PRIVATE_IP }}
+          username: ubuntu
+          key: ${{ secrets.PRIVATE_SSH_KEY }}
+          proxy_host: ${{ secrets.BASTION_PUBLIC_IP }}
+          proxy_username: ubuntu
+          proxy_key: ${{ secrets.BASTION_SSH_KEY }}
+          script: |
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/back-eval2:latest
+            docker rm -f back-eval2 || true
+            docker ps -q --filter publish=3000 | xargs -r docker rm -f || true
+            docker run -d \
+              --name back-eval2 \
+              --restart always \
+              -p 3000:3000 \
+              -e DB_HOST=${{ secrets.DB_HOST }} \
+              -e DB_USER=${{ secrets.MYSQL_USER }} \
+              -e DB_PASSWORD=${{ secrets.MYSQL_PASSWORD }} \
+              -e DB_NAME=${{ secrets.MYSQL_DATABASE }} \
+              -e DB_PORT=3306 \
+              ${{ secrets.DOCKERHUB_USERNAME }}/back-eval2:latest
