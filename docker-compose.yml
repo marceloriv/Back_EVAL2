@@ -9,7 +9,7 @@ services:
       - "3000:3000"
     environment:
       - PORT=3000
-      - DB_HOST=${DB_HOST}
+      - DB_HOST=db
       - DB_PORT=3306
       - DB_NAME=${MYSQL_DATABASE}
       - DB_USER=${MYSQL_USER}
