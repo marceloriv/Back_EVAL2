@@ -1,0 +1,20 @@
+version: "3.8"
+
+services:
+  backend:
+    build: .
+    container_name: node_backend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=3306
+      - DB_NAME=${MYSQL_DATABASE}
+      - DB_USER=${MYSQL_USER}
+      - DB_PASSWORD=${MYSQL_PASSWORD}
+
+networks:
+  default:
+    driver: bridge
