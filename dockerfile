@@ -19,11 +19,6 @@ USER appuser
 EXPOSE 3000
 
 ENV NODE_ENV=production \
-    PORT=3000 \
-    DB_HOST=db \
-    DB_PORT=3306 \
-    DB_NAME=proyecto_db \
-    DB_USER=app_user \
-    DB_PASSWORD=changeme_in_secrets
+    PORT=3000
 
 CMD ["node", "server.js"]
