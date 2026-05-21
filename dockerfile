@@ -1,20 +1,29 @@
-# Usar la imagen oficial de Node.js (versión 18, versión ligera basada en Alpine)
-FROM node:18-alpine
+# ── Stage 1: builder ──────────────────────────────────────────
+FROM node:18-alpine AS builder
+WORKDIR /app
+COPY package*.json .
+RUN npm ci --only=production && npm cache clean --force
 
-# Establecer el directorio de trabajo dentro del contenedor
+# ── Stage 2: runner ───────────────────────────────────────────
+FROM node:18-alpine AS runner
+
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
 WORKDIR /app
 
-# Copiar el package.json y package-lock.json (si existe)
-# Esto optimiza la caché de Docker durante la construcción
-COPY package*.json ./
+COPY --from=builder /app/node_modules ./node_modules
+COPY --chown=appuser:appgroup . .
 
-# Instalar las dependencias del proyecto
-RUN npm install
-
-# Copiar el resto del código fuente del proyecto
-COPY . .
+USER appuser
 
 EXPOSE 3000
 
-# Comando por defecto para arrancar la aplicación (modo producción)
-CMD ["npm", "start"]
+ENV NODE_ENV=production \
+    PORT=3000 \
+    DB_HOST=db \
+    DB_PORT=3306 \
+    DB_NAME=proyecto_db \
+    DB_USER=app_user \
+    DB_PASSWORD=changeme_in_secrets
+
+CMD ["node", "server.js"]
