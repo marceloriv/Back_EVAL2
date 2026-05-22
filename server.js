@@ -147,6 +147,7 @@ app.listen(PORT, () => {
     console.log(`Servidor backend corriendo en el puerto ${PORT}`);
     console.log(`API disponible en: http://localhost:${PORT}`);
 });
+// uwu
 //test
 // Exportar la app para pruebas
 module.exports = app;
